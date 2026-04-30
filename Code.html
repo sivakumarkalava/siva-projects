@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>DockerFront | Modern Dashboard</title>
+  <!-- Google Fonts & simple CSS reset -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(145deg, #f4f7fc 0%, #eef2f5 100%);
+      min-height: 100vh;
+      color: #1a2c3e;
+      padding: 2rem 1.5rem;
+    }
+
+    /* main container */
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* header + docker badge */
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid rgba(14, 165, 233, 0.25);
+      padding-bottom: 1rem;
+    }
+
+    .title-section h1 {
+      font-weight: 700;
+      font-size: 1.9rem;
+      background: linear-gradient(135deg, #0f2b3d, #1e6f9f);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.3px;
+    }
+
+    .title-section p {
+      color: #4a627a;
+      font-weight: 500;
+      margin-top: 0.3rem;
+      font-size: 0.9rem;
+    }
+
+    .docker-badge {
+      background: #0e2e3e;
+      backdrop-filter: blur(4px);
+      padding: 0.5rem 1.2rem;
+      border-radius: 60px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .docker-badge span:first-child {
+      font-weight: 700;
+      color: #5fc3e0;
+      letter-spacing: 0.5px;
+    }
+
+    .docker-badge span:last-child {
+      background: #1f6390;
+      padding: 4px 12px;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    /* stats cards row */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(2px);
+      border-radius: 28px;
+      padding: 1.4rem 1.6rem;
+      box-shadow: 0 12px 26px -8px rgba(0, 32, 64, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s;
+      border: 1px solid rgba(255,255,255,0.7);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 30px -12px rgba(0,0,0,0.12);
+      background: white;
+    }
+
+    .stat-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      color: #5e7e9e;
+      margin-bottom: 0.7rem;
+    }
+
+    .stat-value {
+      font-size: 2.3rem;
+      font-weight: 800;
+      color: #0a2a3b;
+      line-height: 1;
+    }
+
+    .stat-unit {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #5596b9;
+    }
+
+    /* main panels */
+    .dashboard-panels {
+      display: grid;
+      grid-template-columns: 1fr 0.9fr;
+      gap: 1.8rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 780px) {
+      .dashboard-panels {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      body {
+        padding: 1.2rem;
+      }
+    }
+
+    .panel {
+      background: white;
+      border-radius: 32px;
+      padding: 1.5rem 1.6rem;
+      box-shadow: 0 14px 28px -12px rgba(0, 0, 0, 0.08);
+      transition: all 0.2s;
+      border: 1px solid #e8edf2;
+    }
+
+    .panel h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #1c4e6e;
+      border-left: 4px solid #2c9cd4;
+      padding-left: 12px;
+    }
+
+    .task-list {
+      list-style: none;
+      margin-top: 0.5rem;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .task-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .task-check {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: #2c9cd4;
+    }
+
+    .task-text {
+      font-weight: 500;
+      color: #1f3e54;
+    }
+
+    .task-completed {
+      text-decoration: line-through;
+      color: #93afc2;
+    }
+
+    .delete-task {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #bcafa2;
+      transition: 0.1s;
+      padding: 4px 8px;
+      border-radius: 20px;
+    }
+
+    .delete-task:hover {
+      color: #e15a5a;
+      background: #fef2f2;
+    }
+
+    .add-task-form {
+      display: flex;
+      gap: 10px;
+      margin-top: 1.2rem;
+    }
+
+    .add-task-form input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #cfdfed;
+      border-radius: 34px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      background: #fefefe;
+      transition: 0.2s;
+    }
+
+    .add-task-form input:focus {
+      outline: none;
+      border-color: #2c9cd4;
+      box-shadow: 0 0 0 2px rgba(44,156,212,0.2);
+    }
+
+    .btn-primary {
+      background: #1f6e94;
+      border: none;
+      padding: 0 22px;
+      border-radius: 40px;
+      font-weight: 600;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.85rem;
+    }
+
+    .btn-primary:hover {
+      background: #0e577a;
+      transform: scale(0.97);
+    }
+
+    .info-card {
+      background: #eef6fc;
+      border-radius: 24px;
+      padding: 1rem 1.2rem;
+      margin-top: 1rem;
+    }
+
+    .info-card p {
+      font-size: 0.85rem;
+      color: #2c6282;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .refresh-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.2rem;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid #bdd8ec;
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: 0.2s;
+      color: #1f6e94;
+    }
+
+    .btn-outline:hover {
+      background: #e2f0f9;
+      border-color: #2c9cd4;
+    }
+
+    .live-timestamp {
+      font-family: monospace;
+      font-size: 0.8rem;
+      background: #eef2f5;
+      padding: 6px 12px;
+      border-radius: 28px;
+      color: #286b8c;
+    }
+
+    footer {
+      margin-top: 2.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #6e8ea8;
+      border-top: 1px solid rgba(0,0,0,0.05);
+      padding-top: 1.5rem;
+    }
+
+    .docker-note {
+      background: #1c2e3b;
+      border-radius: 20px;
+      padding: 0.7rem 1.2rem;
+      color: #b9e2f5;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <div class="header">
+    <div class="title-section">
+      <h1>🐳 docker-front · studio</h1>
+      <p>containerized dashboard | tasks & live metrics</p>
+    </div>
+    <div class="docker-badge">
+      <span>⚓ Docker ready</span>
+      <span>nginx:alpine</span>
+    </div>
+  </div>
+
+  <!-- dynamic stats cards -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-title">📦 Container health</div><div class="stat-value" id="healthValue">99.9%</div><div class="stat-unit">uptime SLA</div></div>
+    <div class="stat-card"><div class="stat-title">🔄 Active sessions</div><div class="stat-value" id="sessionValue">—</div><div class="stat-unit">real-time</div></div>
+    <div class="stat-card"><div class="stat-title">✅ Tasks completed</div><div class="stat-value" id="completedTasksCount">0</div><div class="stat-unit">total done</div></div>
+    <div class="stat-card"><div class="stat-title">⏱️ Last render</div><div class="stat-value" id="lastRenderTime">—</div><div class="stat-unit">timestamp</div></div>
+  </div>
+
+  <div class="dashboard-panels">
+    <!-- LEFT: Interactive Task Manager -->
+    <div class="panel">
+      <h3>📋  DevOps Taskflow</h3>
+      <ul class="task-list" id="taskListContainer">
+        <!-- dynamic tasks injected here -->
+      </ul>
+      <div class="add-task-form">
+        <input type="text" id="newTaskInput" placeholder="write a task... e.g., 'Write Dockerfile'" autocomplete="off">
+        <button class="btn-primary" id="addTaskBtn">+ Add Task</button>
+      </div>
+      <div class="info-card">
+        <p>💡 <strong>Docker tip:</strong> Tasks persist in browser localStorage — perfect for demo containerized storage simulation.</p>
+      </div>
+    </div>
+
+    <!-- RIGHT: Live metrics & docker insights -->
+    <div class="panel">
+      <h3>🐙  Container observability</h3>
+      <div id="dockerMetricsArea">
+        <div class="stat-like" style="margin-bottom: 12px;">
+          <div style="font-weight:500;">🌐  Environment</div>
+          <div id="envDisplay" style="background:#f8fafc; padding:8px 12px; border-radius: 16px; margin-top: 6px; font-family: monospace; font-size:0.85rem;">container: frontend-app</div>
+        </div>
+        <div class="stat-like" style="margin-bottom: 12px;">
+          <div style="font-weight:500;">📊  Request simulation (API mock)</div>
+          <div id="apiLatency" style="font-size:1rem; margin-top:6px;">⚡ latency: <strong>32ms</strong></div>
+          <div id="deploymentInfo" style="font-size:0.8rem; color:#477a9b;">deployed via docker → port 80</div>
+        </div>
+        <div class="refresh-row">
+          <button class="btn-outline" id="refreshMetricsBtn">🔄 Refresh metrics</button>
+          <div class="live-timestamp" id="liveClock">--:--:--</div>
+        </div>
+      </div>
+      <div class="docker-note" style="margin-top: 18px; width:100%; justify-content:center;">
+        <span>🐋</span> <span>FROM nginx:alpine  |  COPY . /usr/share/nginx/html  |  EXPOSE 80</span>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <span>✨ Fully static frontend | Optimized for docker deployment | JavaScript powered task manager & live simulation ✨</span>
+  </footer>
+</div>
+
+<script>
+  (function() {
+    // ---------- TASK MANAGER (localStorage) ----------
+    let tasks = [];
+
+    // DOM elements
+    const taskListContainer = document.getElementById('taskListContainer');
+    const newTaskInput = document.getElementById('newTaskInput');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const completedTasksSpan = document.getElementById('completedTasksCount');
+    const sessionValueSpan = document.getElementById('sessionValue');
+    const healthValueSpan = document.getElementById('healthValue');
+    const lastRenderSpan = document.getElementById('lastRenderTime');
+
+    // helper: update completed counter in stats
+    function updateCompletedCount() {
+      const completedCount = tasks.filter(t => t.completed).length;
+      if (completedTasksSpan) completedTasksSpan.innerText = completedCount;
+    }
+
+    // render tasks into UI
+    function renderTasks() {
+      if (!taskListContainer) return;
+      if (tasks.length === 0) {
+        taskListContainer.innerHTML = `<li style="padding: 1rem 0; text-align: center; color: #89a9c4;">✨ No tasks yet. Add one above ✨</li>`;
+        updateCompletedCount();
+        return;
+      }
+
+      taskListContainer.innerHTML = '';
+      tasks.forEach((task, idx) => {
+        const li = document.createElement('li');
+        li.className = 'task-item';
+        
+        const leftDiv = document.createElement('div');
+        leftDiv.className = 'task-left';
+        
+        const checkBox = document.createElement('input');
+        checkBox.type = 'checkbox';
+        checkBox.className = 'task-check';
+        checkBox.checked = task.completed;
+        checkBox.addEventListener('change', (e) => {
+          tasks[idx].completed = e.target.checked;
+          saveTasksToLocal();
+          renderTasks();        // re-render to reflect strikethrough & completed counter
+          updateDashboardStats(); // additional sync to stats cards
+          simulateSessionUpdate();   // optional session uptick
+        });
+        
+        const taskTextSpan = document.createElement('span');
+        taskTextSpan.className = `task-text ${task.completed ? 'task-completed' : ''}`;
+        taskTextSpan.innerText = task.text;
+        
+        leftDiv.appendChild(checkBox);
+        leftDiv.appendChild(taskTextSpan);
+        
+        const delBtn = document.createElement('button');
+        delBtn.innerText = '🗑️';
+        delBtn.className = 'delete-task';
+        delBtn.setAttribute('aria-label', 'Delete task');
+        delBtn.addEventListener('click', () => {
+          tasks.splice(idx, 1);
+          saveTasksToLocal();
+          renderTasks();
+          updateCompletedCount();
+          updateDashboardStats();
+          simulateSessionUpdate();
+        });
+        
+        li.appendChild(leftDiv);
+        li.appendChild(delBtn);
+        taskListContainer.appendChild(li);
+      });
+      updateCompletedCount();
+    }
+
+    function saveTasksToLocal() {
+      localStorage.setItem('dockerfront_tasks', JSON.stringify(tasks));
+    }
+
+    function loadTasksFromLocal() {
+      const stored = localStorage.getItem('dockerfront_tasks');
+      if (stored) {
+        try {
+          tasks = JSON.parse(stored);
+          if (!Array.isArray(tasks)) tasks = [];
+        } catch(e) { tasks = []; }
+      }
+      if (tasks.length === 0) {
+        // seed some default tasks illustrating docker readiness
+        tasks = [
+          { text: "🐳 Write Dockerfile (multi-stage)", completed: false },
+          { text: "📦 Expose port 80 and copy assets", completed: false },
+          { text: "🚀 Run container: docker build -t frontend-app .", completed: false },
+          { text: "🧪 Test responsiveness inside container", completed: true }
+        ];
+        saveTasksToLocal();
+      }
+      renderTasks();
+    }
+
+    // ----- DYNAMIC DASHBOARD STATS & LIVE SIMULATION -----
+    let sessionCounter = 124;    // simulated active sessions
+    let healthTrend = 99.9;
+    let lastRenderTimestamp = new Date();
+
+    function updateLastRenderTime() {
+      if (lastRenderSpan) {
+        const now = new Date();
+        lastRenderTimestamp = now;
+        lastRenderSpan.innerText = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+      }
+    }
+
+    function updateDashboardStats() {
+      // update completed tasks count (already called inside render but ensure again)
+      const completedCount = tasks.filter(t => t.completed).length;
+      if (completedTasksSpan) completedTasksSpan.innerText = completedCount;
+      
+      // update healthValue simulation (slight jitter based on completed tasks %)
+      const totalTasks = tasks.length;
+      let simulatedHealth = 99.5 + (completedCount / (totalTasks || 1)) * 0.4;
+      simulatedHealth = Math.min(100, Math.max(98.2, simulatedHealth));
+      if (healthValueSpan) healthValueSpan.innerText = simulatedHealth.toFixed(1) + '%';
+      
+      // random session simulation: sessions fluctuate based on user interactions
+      if (sessionValueSpan) sessionValueSpan.innerText = sessionCounter;
+      
+      updateLastRenderTime();
+    }
+
+    // simulate session refresh & additional dynamic behaviour
+    function simulateSessionUpdate() {
+      // random flux - just for liveliness
+      const delta = Math.floor(Math.random() * 5) - 1;  // -1 to 3 change
+      let newSessions = sessionCounter + delta;
+      if (newSessions < 85) newSessions = 85;
+      if (newSessions > 380) newSessions = 380;
+      sessionCounter = newSessions;
+      if (sessionValueSpan) sessionValueSpan.innerText = sessionCounter;
+      
+      // also tweak "api latency" mock
+      const latencyElem = document.getElementById('apiLatency');
+      if (latencyElem) {
+        const randomLatency = Math.floor(Math.random() * 45) + 18; // 18-63ms
+        latencyElem.innerHTML = `⚡ latency: <strong>${randomLatency}ms</strong> <span style="font-size:0.7rem;">(mock api)</span>`;
+      }
+      
+      // update health based on sessions load
+      let health = 99.2 + (Math.random() * 0.8);
+      if (healthValueSpan) healthValueSpan.innerText = health.toFixed(1) + '%';
+      updateLastRenderTime();
+    }
+    
+    // specific refresh triggered by button
+    function fullManualRefreshMetrics() {
+      simulateSessionUpdate();   // random latency + sessions
+      // also dispatch a custom "deployment" message effect
+      const deployDiv = document.getElementById('deploymentInfo');
+      if (deployDiv) {
+        deployDiv.innerHTML = `🔄 metrics refreshed at ${new Date().toLocaleTimeString()} | container stable`;
+        setTimeout(() => {
+          deployDiv.innerHTML = `deployed via docker → port 80 | nginx serving static`;
+        }, 1800);
+      }
+      updateDashboardStats();
+    }
+    
+    // Live clock update every second
+    function initLiveClock() {
+      const clockElement = document.getElementById('liveClock');
+      if (!clockElement) return;
+      function tick() {
+        const now = new Date();
+        clockElement.innerText = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+    
+    // auto periodic simulation for active dashboard (every 12 seconds)
+    let intervalMetrics;
+    function startAutoRefresh() {
+      if (intervalMetrics) clearInterval(intervalMetrics);
+      intervalMetrics = setInterval(() => {
+        simulateSessionUpdate();
+        updateDashboardStats();
+        // bonus: update environment indicator random micro animation just for fun
+        const envSpan = document.getElementById('envDisplay');
+        if (envSpan && Math.random() > 0.7) {
+          envSpan.style.opacity = '0.7';
+          setTimeout(() => { if(envSpan) envSpan.style.opacity = '1'; }, 200);
+        }
+      }, 12000);
+    }
+    
+    // add new task handler
+    function addNewTask() {
+      const taskText = newTaskInput.value.trim();
+      if (taskText === "") {
+        // subtle alert but more friendly
+        const infoDiv = document.querySelector('.info-card p');
+        if(infoDiv) {
+          const original = infoDiv.innerHTML;
+          infoDiv.innerHTML = "⚠️ Please write a task first! ⚠️";
+          setTimeout(() => {
+            if(infoDiv) infoDiv.innerHTML = original;
+          }, 1200);
+        }
+        return;
+      }
+      tasks.push({ text: taskText, completed: false });
+      saveTasksToLocal();
+      renderTasks();
+      updateDashboardStats();
+      newTaskInput.value = "";
+      // focus back
+      newTaskInput.focus();
+      simulateSessionUpdate();  // user activity increases sessions
+    }
+    
+    // Event listeners
+    if (addTaskBtn) addTaskBtn.addEventListener('click', addNewTask);
+    if (newTaskInput) {
+      newTaskInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addNewTask();
+      });
+    }
+    
+    const refreshBtn = document.getElementById('refreshMetricsBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', fullManualRefreshMetrics);
+    
+    // initial load tasks
+    loadTasksFromLocal();
+    
+    // initial stats set
+    function initialStats() {
+      updateDashboardStats();
+      // initial sessions number
+      sessionCounter = Math.floor(Math.random() * 130) + 95; // 95-225
+      if (sessionValueSpan) sessionValueSpan.innerText = sessionCounter;
+      const mockLatencySpan = document.getElementById('apiLatency');
+      if (mockLatencySpan) mockLatencySpan.innerHTML = `⚡ latency: <strong>24ms</strong> <span style="font-size:0.7rem;">(mock api)</span>`;
+      updateLastRenderTime();
+      // environment display from navigator (just for info)
+      const envDiv = document.getElementById('envDisplay');
+      if (envDiv) {
+        envDiv.innerHTML = `📟 containerized frontend · userAgent: ${navigator.userAgent.split(' ').slice(-2).join(' ').substring(0, 32)}`;
+      }
+      const deployDiv = document.getElementById('deploymentInfo');
+      if(deployDiv) deployDiv.innerHTML = `✅ running inside container · serving /usr/share/nginx/html`;
+    }
+    
+    initialStats();
+    startAutoRefresh();
+    initLiveClock();
+    
+    // extra: handle storage sync across tabs (tiny bonus)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'dockerfront_tasks') {
+        loadTasksFromLocal();
+        updateDashboardStats();
+        simulateSessionUpdate();
+      }
+    });
+    
+    // expose hidden method for demo completeness
+    window.__dockerFrontRefresh = fullManualRefreshMetrics;
+  })();
+</script>
+</body>
+</html>
